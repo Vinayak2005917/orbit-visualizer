@@ -9,19 +9,69 @@ if os.path.exists("orbit_plot.png"):
     os.remove("orbit_plot.png")
 
 st.title('Orbit Visualizer')
+st.write("Visualize satellite orbits around Earth with dual-view plots and animations. Either enter custom parameters or select from presets to quickly generate the orbit plots.")
 
 #taking user input for semi major axis, eccentricity, True anomaly and inclination
-st.sidebar.header('Input Keplerian Parameters')
-semi_major_axis = st.sidebar.number_input('Semi Major Axis (in km)', min_value=7000, max_value=1000000, value=10000)
-eccentricity = st.sidebar.number_input('Eccentricity', min_value=0.0, max_value=1.0, value=0.1)
-true_anomaly = st.sidebar.number_input('True Anomaly (in radians)', min_value=0.0, max_value=6.28, value=1.0)
-inclination = st.sidebar.number_input('Inclination (in degrees)', min_value=0.0, max_value=360.0, value=25.0)
+
+mode = st.sidebar.toggle("Switch Paramter Type")
+
+# Default to Keplerian parameters
+if not mode:
+    st.sidebar.header('Input simplified Parameters')
+    apogee = float(st.sidebar.number_input('Apogee from sea level (in km)', min_value=0, max_value=1000000, value=500)) + 6378  # Adding Earth's radius
+    perigee = float(st.sidebar.number_input('Perigee from sea level (in km)', min_value=0, max_value=1000000, value=500)) + 6378  # Adding Earth's radius
+    inclination = float(st.sidebar.number_input('Inclination (in degrees)', min_value=0.0, max_value=360.0, value=25.0))
+    # Convert simplified parameters to Keplerian elements
+    semi_major_axis = (apogee + perigee) / 2
+    eccentricity = (apogee - perigee) / (apogee + perigee)
+    true_anomaly = 1  # Default value
+    inclination = float(inclination)
+else:
+    # Default: Keplerian parameters (shows by default or when button 'a' is clicked)
+    st.sidebar.header('Input Keplerian Parameters')
+    semi_major_axis = float(st.sidebar.number_input('Semi Major Axis (in km)', min_value=7000, max_value=1000000, value=10000))
+    eccentricity = float(st.sidebar.number_input('Eccentricity', min_value=0.0, max_value=1.0, value=0.1))
+    true_anomaly = float(st.sidebar.number_input('True Anomaly (in radians)', min_value=0.0, max_value=6.28, value=1.0))
+    inclination = float(st.sidebar.number_input('Inclination (in degrees)', min_value=0.0, max_value=360.0, value=25.0))
 
 
-semi_major_axis = float(semi_major_axis)
-eccentricity = float(eccentricity)
-true_anomaly = float(true_anomaly)
-inclination = float(inclination)
+preset = st.sidebar.selectbox("Presets", options=["None","ISS", "SSO", "GEO", "GSO", "Molniya", "Tundra", "MEO", "Moon"], index=0, key="view_option")
+
+if preset == "None":
+    pass
+elif preset == "ISS":
+    semi_major_axis = 6780  # km
+    eccentricity = 0.0007
+    inclination = 51.6  # degrees
+elif preset == "SSO":
+    semi_major_axis = 7078  # km
+    eccentricity = 0.0001
+    inclination = 98.7  # degrees
+elif preset == "GEO":
+    semi_major_axis = 42164  # km
+    eccentricity = 0.0001
+    inclination = 0.0  # degrees
+elif preset == "GSO":
+    semi_major_axis = 42164
+    eccentricity = 0.0001
+    inclination = 0.0
+elif preset == "Molniya":
+    semi_major_axis = 26500
+    eccentricity = 0.74
+    inclination = 63.4
+elif preset == "Tundra":
+    semi_major_axis = 42164
+    eccentricity = 0.1
+    inclination = 63.4
+elif preset == "MEO":
+    semi_major_axis = 20000
+    eccentricity = 0.1
+    inclination = 55.0
+elif preset == "Moon":
+    semi_major_axis = 384400
+    eccentricity = 0.0549
+    inclination = 5.145
+
 fig = op.plot_orbit(semi_major_axis, eccentricity, true_anomaly, inclination)
 
 #button to plot animated orbit
@@ -50,6 +100,7 @@ else:
     #Show static plot by default
     if os.path.exists("orbit_plot.png"):
         st.image("orbit_plot.png", caption='Static Orbit Plot')
+
 
 
 st.write("### Orbit Parameters")
