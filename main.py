@@ -1,6 +1,8 @@
 import streamlit as st
 import os
 import Orbit_plotter as op
+import time
+from math import ceil, floor
 
 #deleting older plot image if it exists
 if os.path.exists("orbit_plot.png"):
@@ -22,6 +24,34 @@ true_anomaly = float(true_anomaly)
 inclination = float(inclination)
 fig = op.plot_orbit(semi_major_axis, eccentricity, true_anomaly, inclination)
 
+#button to plot animated orbit
+st.sidebar.write("Generating animation takes some time, please be patient.")
+if st.sidebar.button('Animate!'):
+    # Delete old animation if it exists
+    if os.path.exists("orbit_animation.gif"):
+        os.remove("orbit_animation.gif")
+    # Check if animation already exists
+    if os.path.exists("orbit_animation.gif"):
+        st.image("orbit_animation.gif", caption='Animated Orbit Plot')
+        st.info("Using existing animation (click again to regenerate)")
+    else:
+        with st.spinner('Generating animation... This may take a moment.'):
+            op.plot_animated_orbit(semi_major_axis, eccentricity, inclination)
+        
+        # Check if the GIF was created successfully
+        if os.path.exists("orbit_animation.gif"):
+            st.image("orbit_animation.gif", caption='Animated Orbit Plot')
+            st.success("Animation generated successfully!")
+        else:
+            st.error("Failed to generate animation. Please try again.")
+    st.sidebar.button('Static Plot', on_click=op.plot_orbit, args=(semi_major_axis, eccentricity, true_anomaly, inclination))
 
-#displaying an image in Streamlit
-st.image("orbit_plot.png")
+else:
+    #Show static plot by default
+    if os.path.exists("orbit_plot.png"):
+        st.image("orbit_plot.png", caption='Static Orbit Plot')
+
+
+st.write("### Orbit Parameters")
+st.write(f"**Apogee:** {ceil(semi_major_axis * (1 + eccentricity)):.2f} km")
+st.write(f"**Perigee:** {ceil(semi_major_axis * (1 - eccentricity)):.2f} km")
